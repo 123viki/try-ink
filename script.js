@@ -1,38 +1,9 @@
-const cart = [];
-const cartEl = document.querySelector('#cart');
-const overlay = document.querySelector('#overlay');
-const cartItems = document.querySelector('#cartItems');
-const cartCount = document.querySelector('#cartCount');
-const cartHeadingCount = document.querySelector('#cartHeadingCount');
-const cartTotal = document.querySelector('#cartTotal');
-const toast = document.querySelector('#toast');
-const productsEl = document.querySelector('.products');
-
-productsEl.innerHTML = Array.from({ length: 31 }, (_, index) => {
-  const number = String(index + 1).padStart(2, '0');
-  return '<article class="product-card product-real"><div class="product-image" style="display:grid;place-items:center;background:#d9d6ce;color:#111;font:500 clamp(72px,10vw,140px)/1 serif;">' + number + '<span class="available">NOVO</span></div><div class="product-info"><div><h3>Design ' + number + '</h3><p>tattoo temporária</p></div><button class="add-button" type="button" data-name="Design ' + number + '" data-price="10">Adicionar <span>+</span></button></div><p class="price">€10</p></article>';
-}).join('');
-
-function totalItems() { return cart.reduce((sum, item) => sum + item.quantity, 0); }
-function totalPrice() { return cart.reduce((sum, item) => sum + item.price * item.quantity, 0); }
-function openCart() { cartEl.classList.add('open'); overlay.classList.add('show'); }
-function closeCart() { cartEl.classList.remove('open'); overlay.classList.remove('show'); }
-function renderCart() {
-  cartCount.textContent = totalItems();
-  cartHeadingCount.textContent = totalItems();
-  cartTotal.textContent = '€' + totalPrice();
-  cartItems.innerHTML = cart.length ? cart.map((item, index) => '<div class="cart-item"><div><strong>' + item.name + '</strong><small>€10 × ' + item.quantity + '</small></div><div><button type="button" data-minus="' + index + '">−</button><span>' + item.quantity + '</span><button type="button" data-plus="' + index + '">+</button><button type="button" data-remove="' + index + '">×</button></div></div>').join('') : '<p class="empty-cart">A tua seleção está vazia.</p>';
-}
-function addItem(button) {
-  const existing = cart.find(item => item.name === button.dataset.name);
-  if (existing) existing.quantity += 1;
-  else cart.push({ name: button.dataset.name, price: 10, quantity: 1 });
-  renderCart(); openCart(); toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800);
-}
-productsEl.addEventListener('click', event => { const button = event.target.closest('.add-button'); if (button) addItem(button); });
-cartItems.addEventListener('click', event => { const plus = event.target.closest('[data-plus]'); const minus = event.target.closest('[data-minus]'); const remove = event.target.closest('[data-remove]'); if (plus) cart[Number(plus.dataset.plus)].quantity += 1; if (minus) { const i = Number(minus.dataset.minus); cart[i].quantity -= 1; if (cart[i].quantity === 0) cart.splice(i, 1); } if (remove) cart.splice(Number(remove.dataset.remove), 1); renderCart(); });
-document.querySelector('#cartButton').addEventListener('click', openCart);
-document.querySelector('#closeCart').addEventListener('click', closeCart);
-overlay.addEventListener('click', closeCart);
-document.querySelectorAll('.filters button').forEach(button => button.addEventListener('click', () => { document.querySelector('.filters .active').classList.remove('active'); button.classList.add('active'); }));
-renderCart();
+const cart = [];const cartEl = document.querySelector('#cart');const overlay = document.querySelector('#overlay');const cartItems = document.querySelector('#cartItems');const cartCount = document.querySelector('#cartCount');const cartHeadingCount = document.querySelector('#cartHeadingCount');const cartTotal = document.querySelector('#cartTotal');const toast = document.querySelector('#toast');const productsEl = document.querySelector('.products');productsEl.innerHTML = Array.from({ length: 31 }, (_, index) => {  const number = String(index + 1).padStart(2, '0');  return '<article class="product-card product-real"><div class="product-image" style="display:grid;place-items:center;background:#d9d6ce;color:#111;font:500 clamp(72px,10vw,140px)/1 serif;">' + number + '<span class="available">NOVO</span></div><div class="product-info"><div><h3>Design ' + number + '</h3><p>tattoo temporária</p></div><button class="add-button" type="button" data-name="Design ' + number + '" data-price="10">Adicionar <span>+</span></button></div><p class="price">€10</p></article>';}).join('');function totalItems() { return cart.reduce((sum, item) => sum + item.quantity, 0); }function totalPrice() { return cart.reduce((sum, item) => sum + item.price * item.quantity, 0); }function openCart() { cartEl.classList.add('open'); overlay.classList.add('show'); }function closeCart() { cartEl.classList.remove('open'); overlay.classList.remove('show'); }function renderCart() {  cartCount.textContent = totalItems();  cartHeadingCount.textContent = totalItems();  cartTotal.textContent = '€' + totalPrice();  cartItems.innerHTML = cart.length ? cart.map((item, index) => '<div class="cart-item"><div><strong>' + item.name + '</strong><small>€10 × ' + item.quantity + '</small></div><div><button type="button" data-minus="' + index + '">−</button><span>' + item.quantity + '</span><button type="button" data-plus="' + index + '">+</button><button type="button" data-remove="' + index + '">×</button></div></div>').join('') : '<p class="empty-cart">A tua seleção está vazia.</p>';}function addItem(button) {  const existing = cart.find(item => item.name === button.dataset.name);  if (existing) existing.quantity += 1;  else cart.push({ name: button.dataset.name, price: 10, quantity: 1 });  renderCart(); openCart(); toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800);}productsEl.addEventListener('click', event => { const button = event.target.closest('.add-button'); if (button) addItem(button); });cartItems.addEventListener('click', event => { const plus = event.target.closest('[data-plus]'); const minus = event.target.closest('[data-minus]'); const remove = event.target.closest('[data-remove]'); if (plus) cart[Number(plus.dataset.plus)].quantity += 1; if (minus) { const i = Number(minus.dataset.minus); cart[i].quantity -= 1; if (cart[i].quantity === 0) cart.splice(i, 1); } if (remove) cart.splice(Number(remove.dataset.remove), 1); renderCart(); });document.querySelector('#cartButton').addEventListener('click', openCart);document.querySelector('#closeCart').addEventListener('click', closeCart);overlay.addEventListener('click', closeCart);
+const orderModal = document.querySelector('#orderModal');
+const orderSummary = document.querySelector('#orderSummary');
+const orderForm = document.querySelector('#orderForm');
+const orderItemsInput = document.querySelector('#orderItemsInput');
+const orderTotalInput = document.querySelector('#orderTotalInput');
+document.querySelector('#checkoutButton').addEventListener('click', () => { if (!cart.length) { toast.textContent = 'Adiciona primeiro uma tattoo à tua bag.'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); return; } orderSummary.innerHTML = '<p>O teu pedido</p><ul>' + cart.map(item => '<li>' + item.name + ' × ' + item.quantity + '<span>€' + (item.price * item.quantity) + '</span></li>').join('') + '</ul><strong>Total: €' + totalPrice() + '</strong>'; closeCart(); orderModal.classList.add('open'); orderModal.setAttribute('aria-hidden','false'); });
+document.querySelector('#closeOrderModal').addEventListener('click', () => { orderModal.classList.remove('open'); orderModal.setAttribute('aria-hidden','true'); });
+orderForm.addEventListener('submit', () => { orderItemsInput.value = cart.map(item => item.name + ' × ' + item.quantity).join(', '); orderTotalInput.value = '€' + totalPrice(); });
