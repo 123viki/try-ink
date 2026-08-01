@@ -1,4 +1,6 @@
-const cart = [];
+const cart = JSON.parse(localStorage.getItem('tryInkCart') || '[]');
+
+function saveCart() { localStorage.setItem('tryInkCart', JSON.stringify(cart)); }
 const cartEl = document.querySelector('#cart');
 const overlay = document.querySelector('#overlay');
 const cartItems = document.querySelector('#cartItems');
@@ -34,14 +36,13 @@ function showToast(message = 'Adicionado à tua bag.') {
 }
 
 function renderCart() {
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
-  cartCount.textContent = cart.length;
-  cartHeadingCount.textContent = cart.length;
+  const quantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  cartCount.textContent = quantity;
+  cartHeadingCount.textContent = quantity;
   cartTotal.textContent = `€${total}`;
   cartShipping.textContent = total >= 25 ? '✓ Portes grátis incluídos.' : `Faltam €${25 - total} para teres portes grátis.`;
-  cartItems.innerHTML = cart.length
-    ? cart.map((item, index) => `<div class="cart-item"><div><strong>${item.name}</strong><small>Design exclusivo</small></div><div>€${item.price} <button type="button" aria-label="Remover ${item.name}" data-remove="${index}">×</button></div></div>`).join('')
-    : '<p class="empty-cart">A tua seleção está vazia.</p>';
+  cartItems.innerHTML = cart.length ? cart.map((item, index) => `<div class="cart-item"><div><strong>${item.name}</strong><small>Design exclusivo</small></div><div class="cart-item-actions"><div class="quantity-control"><button type="button" aria-label="Diminuir ${item.name}" data-change="-1" data-index="${index}">−</button><span>${item.quantity}</span><button type="button" aria-label="Aumentar ${item.name}" data-change="1" data-index="${index}">+</button></div><button class="remove-item" type="button" aria-label="Remover ${item.name}" data-remove="${index}">×</button></div></div>`).join('') : '<p class="empty-cart">A tua seleção está vazia.</p>';
 }
 
 function openCart() {
@@ -57,7 +58,7 @@ function closeCart() {
 }
 
 function cartTotalValue() {
-  return cart.reduce((sum, item) => sum + item.price, 0);
+  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 }
 
 function openOrderModal() {
@@ -65,7 +66,7 @@ function openOrderModal() {
     showToast('Adiciona primeiro uma tattoo à tua bag.');
     return;
   }
-  const items = cart.map(item => `<li>${item.name} <span>€${item.price}</span></li>`).join('');
+  const items = cart.map(item => `<li>${item.name} × ${item.quantity} <span>€${item.price * item.quantity}</span></li>`).join('');
   orderSummary.innerHTML = `<p>O teu pedido</p><ul>${items}</ul><strong>Total: €${cartTotalValue()}</strong>`;
   closeCart();
   orderModal.classList.add('open');
@@ -81,16 +82,25 @@ function closeOrderModal() {
 productsEl.addEventListener('click', event => {
   const button = event.target.closest('.add-button');
   if (!button) return;
-  cart.push({ name: button.dataset.name, price: Number(button.dataset.price) });
+  const existing = cart.find(item => item.name === button.dataset.name);
+  if (existing) existing.quantity += 1;
+  else cart.push({ name: button.dataset.name, price: Number(button.dataset.price), quantity: 1 });
+  saveCart();
   renderCart();
   openCart();
   showToast();
 });
 
 cartItems.addEventListener('click', event => {
-  const button = event.target.closest('[data-remove]');
-  if (!button) return;
-  cart.splice(Number(button.dataset.remove), 1);
+  const change = event.target.closest('[data-change]');
+  const remove = event.target.closest('[data-remove]');
+  if (change) {
+    const item = cart[Number(change.dataset.index)];
+    item.quantity += Number(change.dataset.change);
+    if (item.quantity < 1) cart.splice(Number(change.dataset.index), 1);
+  } else if (remove) cart.splice(Number(remove.dataset.remove), 1);
+  else return;
+  saveCart();
   renderCart();
 });
 
@@ -106,9 +116,12 @@ orderForm.addEventListener('submit', event => {
     closeOrderModal();
     return;
   }
-  orderItemsInput.value = cart.map(item => `${item.name} (€${item.price})`).join(', ');
+  orderItemsInput.value = cart.map(item => `${item.name} × ${item.quantity} (€${item.price * item.quantity})`).join(', ');
   orderTotalInput.value = `€${cartTotalValue()}`;
+  saveCart();
 });
+renderCart();
+
 document.querySelectorAll('.filters button').forEach(button => button.addEventListener('click', () => {
   document.querySelector('.filters .active').classList.remove('active');
   button.classList.add('active');
